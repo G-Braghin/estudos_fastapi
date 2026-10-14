@@ -1,0 +1,64 @@
+[project]
+name = "estudo-fastapi"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "G-Braghin",email = "braghing@hotmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "fastapi[standard] (>=0.143.1,<0.144.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "ruff (>=0.17.0,<0.18.0)",
+    "typos (>=1.51.1,<2.0.0)",
+    "httpx2 (>=2.13.1,<3.0.0)"
+]
+
+[tool.ruff]
+line-length = 79
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
+[tool.pytest]
+pythonpath = ['.']
+addopts = ['-p', 'no:warnings', '--cov=estudo_fastapi', '--cov-context=test']
+
+[tool.typos.files]
+extend-exclude = ["*.md", "migrations"]
+
+[tool.poe] 
+poetry_command = ""
+
+[tool.poe.tasks]
+lint.sequence = [
+  { cmd = "typos" },
+  { cmd = "ruff check" },
+]
+form.sequence = [
+  { cmd = "ruff check --fix" },
+  { cmd = "ruff format" },
+]
+server = "fastapi dev estudo_fastapi/app.py"
+test.sequence = [
+  "lint",
+  { cmd = "pytest -s -x -vv $POE_EXTRA_ARGS" },
+  { cmd = "coverage html --show-contexts" },
+]
