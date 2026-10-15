@@ -12,8 +12,8 @@ Os estudos são baseados no curso gratuito **FastAPI do Zero**, desenvolvido por
 
 ## Objetivos
 
-- Aprender os fundamentos do FastAPI.~
-- Entender o funcionamento de APIs REST.
+- Aprender os fundamentos do FastAPI.
+- Desenvolver APIs utilizando Python e FastAPI.
 - Trabalhar com rotas, requisições e respostas HTTP.
 - Utilizar Pydantic para validação de dados.
 - Integrar APIs com bancos de dados.
