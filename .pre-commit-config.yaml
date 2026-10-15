@@ -1,0 +1,30 @@
+
+repos:
+
+-   repo: local
+    hooks:
+    -   id: format
+        name: Format (Poe)
+        entry: poetry form
+        language: system
+        types: [python]
+        stages: [pre-commit]
+        pass_filenames: false
+
+    -   id: lint
+        name: Lint (Poe)
+        entry: poetry lint
+        language: system
+        types: [python]
+        stages: [pre-commit]
+        pass_filenames: false
+
+- repo: https://github.com/python-poetry/poetry
+  rev: '2.5.1'
+  hooks:
+  -   id: poetry-lock
+      stages: [pre-commit]
+
+  -   id: poetry-check
+      args: [--lock]
+      stages: [pre-commit]

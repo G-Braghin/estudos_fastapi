@@ -22,7 +22,9 @@ dev = [
     "pytest-cov (>=7.1.0,<8.0.0)",
     "ruff (>=0.17.0,<0.18.0)",
     "typos (>=1.51.1,<2.0.0)",
-    "httpx2 (>=2.13.1,<3.0.0)"
+    "httpx2 (>=2.13.1,<3.0.0)",
+    "pre-commit (>=4.7.0,<5.0.0)",
+    "mypy (>=2.4.0,<3.0.0)"
 ]
 
 [tool.ruff]
@@ -44,17 +46,26 @@ addopts = ['-p', 'no:warnings', '--cov=estudo_fastapi', '--cov-context=test']
 [tool.typos.files]
 extend-exclude = ["*.md", "migrations"]
 
+[tool.mypy]
+files = ['.']
+check_untyped_defs = true
+warn_unused_configs = true
+warn_redundant_casts = true
+
+
 [tool.poe] 
 poetry_command = ""
 
 [tool.poe.tasks]
+
 lint.sequence = [
   { cmd = "typos" },
   { cmd = "ruff check" },
+  { cmd = "mypy"}
 ]
 form.sequence = [
-  { cmd = "ruff check --fix" },
   { cmd = "ruff format" },
+  { cmd = "ruff check --fix" },
 ]
 server = "fastapi dev estudo_fastapi/app.py"
 test.sequence = [
