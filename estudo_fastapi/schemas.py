@@ -21,3 +21,8 @@ class UserPublic(BaseModel):
 
 class UserList(BaseModel):
     users: list[UserPublic]
+
+
+class Token(BaseModel):
+    access_token: str  # Token do PyJWT que vamos gerar
+    token_type: str  # O modelo que deve usar para Autenticação
