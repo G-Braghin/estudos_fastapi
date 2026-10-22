@@ -9,12 +9,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from estudo_fastapi.database import get_session
 from estudo_fastapi.models import User
 from estudo_fastapi.schemas import Token
-from estudo_fastapi.security import create_access_token, verify_password
+from estudo_fastapi.security import (
+    create_access_token,
+    get_current_user,
+    verify_password,
+)
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.post('/token', response_model=Token)
@@ -37,3 +42,10 @@ async def login_for_access_token(
         )
     access_token = create_access_token({'sub': user.email})
     return {'access_token': access_token, 'token_type': 'Bearer'}
+
+
+@router.post('/refresh_token', response_model=Token)
+async def refresh_access_token(user: CurrentUser):
+    new_access_token = create_access_token(data={'sub': user.email})
+
+    return {'access_token': new_access_token, 'token_type': 'Bearer'}

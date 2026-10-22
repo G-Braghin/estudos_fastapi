@@ -74,22 +74,13 @@ def test_delete_user(client, user, token):
     assert response.json() == {'message': 'User deleted'}
 
 
-def test_update_user_integrity_error(client, user, token):
-    client.post(
-        '/users/',
-        json={
-            'username': 'Alice',
-            'email': 'alice@example.com',
-            'password': 'password',
-        },
-    )
-
+def test_update_user_integrity_error(client, user, other_user, token):
     response = client.put(
         f'/users/{user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'Alice',
-            'email': user.email,
+            'email': other_user.email,
             'password': 'password',
         },
     )
@@ -126,18 +117,9 @@ def test_create_user_fails_where_email_already_exists(client, user):
     assert response.json() == {'detail': 'Email already exists'}
 
 
-def test_user_should_not_update_another_user(client, user, token):
-    test_user = client.post(
-        '/users/',
-        json={
-            'username': 'Alice',
-            'email': 'alice@example.com',
-            'password': 'password',
-        },
-    )
-
+def test_user_should_not_update_another_user(client, other_user, token):
     response = client.put(
-        f'/users/{test_user.json()["id"]}',
+        f'/users/{other_user.id}',
         json={
             'username': 'Alice',
             'email': 'alice@example.com',
@@ -150,18 +132,9 @@ def test_user_should_not_update_another_user(client, user, token):
     assert response.json() == {'detail': 'Not enough permission'}
 
 
-def test_user_should_not_delete_another_user(client, user, token):
-    test_user = client.post(
-        '/users/',
-        json={
-            'username': 'Alice',
-            'email': 'alice@example.com',
-            'password': 'password',
-        },
-    )
-
+def test_user_should_not_delete_another_user(client, other_user, token):
     response = client.delete(
-        f'/users/{test_user.json()["id"]}',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
