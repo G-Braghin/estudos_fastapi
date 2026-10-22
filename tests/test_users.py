@@ -124,3 +124,45 @@ def test_create_user_fails_where_email_already_exists(client, user):
 
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Email already exists'}
+
+
+def test_user_should_not_update_another_user(client, user, token):
+    test_user = client.post(
+        '/users/',
+        json={
+            'username': 'Alice',
+            'email': 'alice@example.com',
+            'password': 'password',
+        },
+    )
+
+    response = client.put(
+        f'/users/{test_user.json()["id"]}',
+        json={
+            'username': 'Alice',
+            'email': 'alice@example.com',
+            'password': 'new-password',
+        },
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Not enough permission'}
+
+
+def test_user_should_not_delete_another_user(client, user, token):
+    test_user = client.post(
+        '/users/',
+        json={
+            'username': 'Alice',
+            'email': 'alice@example.com',
+            'password': 'password',
+        },
+    )
+
+    response = client.delete(
+        f'/users/{test_user.json()["id"]}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json() == {'detail': 'Not enough permission'}

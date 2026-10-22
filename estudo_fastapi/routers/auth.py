@@ -4,25 +4,27 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from estudo_fastapi.database import get_session
 from estudo_fastapi.models import User
 from estudo_fastapi.schemas import Token
 from estudo_fastapi.security import create_access_token, verify_password
 
-rauter = APIRouter(prefix='/auth', tags=['auth'])
+router = APIRouter(prefix='/auth', tags=['auth'])
 
-SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 OAuth2Form = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
-@rauter.post('/token', response_model=Token)
-def login_for_access_token(
+@router.post('/token', response_model=Token)
+async def login_for_access_token(
     form_data: OAuth2Form,
     session: SessionDep,
 ):
-    user = session.scalar(select(User).where(User.email == form_data.username))
+    user = await session.scalar(
+        select(User).where(User.email == form_data.username)
+    )
     if not user:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
