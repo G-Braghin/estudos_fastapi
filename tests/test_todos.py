@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 import factory.fuzzy
 import pytest
+from sqlalchemy import select
 
 from estudo_fastapi.models import Todo, TodoState
 
@@ -16,23 +17,25 @@ class TodoFactory(factory.Factory):
     user_id = 1
 
 
-def test_create_todo(client, token):
-    response = client.post(
-        '/todos/',
-        headers={'Authorization': f'Bearer {token}'},
-        json={
+def test_create_todo(client, token, mock_db_time):
+    with mock_db_time(model=Todo) as time:
+        response = client.post(
+            '/todos/',
+            headers={'Authorization': f'Bearer {token}'},
+            json={
+                'title': 'Test todo',
+                'description': 'Test todo description',
+                'state': 'draft',
+            },
+        )
+        assert response.json() == {
+            'id': 1,
             'title': 'Test todo',
             'description': 'Test todo description',
             'state': 'draft',
-        },
-    )
-
-    assert response.json() == {
-        'id': 1,
-        'title': 'Test todo',
-        'description': 'Test todo description',
-        'state': 'draft',
-    }
+            'created_at': time.isoformat(),
+            'updated_at': time.isoformat(),
+        }
 
 
 @pytest.mark.asyncio
@@ -223,3 +226,65 @@ async def test_patch_todo(session, client, user, token):
     )
     assert response.status_code == HTTPStatus.OK
     assert response.json()['title'] == 'teste!'
+
+
+@pytest.mark.asyncio
+async def test_list_todo_should_return_all(
+    session, client, user, token, mock_db_time
+):
+    with mock_db_time(model=Todo) as time:
+        todo = TodoFactory.create(user_id=user.id)
+        session.add(todo)
+        await session.commit()
+
+    await session.refresh(todo)
+    response = client.get(
+        '/todos/',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.json()['todos'] == [
+        {
+            'id': todo.id,
+            'title': todo.title,
+            'description': todo.description,
+            'state': todo.state,
+            'created_at': time.isoformat(),
+            'updated_at': time.isoformat(),
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_create_todo_with_not_exists_estate(session, user):
+    todo = Todo(
+        title='Todo test',
+        description='This is a todo test',
+        state='Not exists',
+        user_id=user.id,
+    )
+    session.add(todo)
+    await session.commit()
+
+    with pytest.raises(LookupError):
+        await session.scalar(select(Todo))
+
+
+def test_list_todos_filter_title_min_length(client, token):
+    short_title = 'a'
+    response = client.get(
+        f'/todos/?title={short_title}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_list_todos_filter_title_max_length(client, token):
+    long_title = 'a' * 25
+    response = client.get(
+        f'/todos/?title={long_title}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
