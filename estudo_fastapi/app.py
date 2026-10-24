@@ -1,3 +1,5 @@
+import asyncio
+import sys
 from http import HTTPStatus
 
 from fastapi import FastAPI
@@ -10,6 +12,9 @@ app = FastAPI()
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(todos.router)
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)

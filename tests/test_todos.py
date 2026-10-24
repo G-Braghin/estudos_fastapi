@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 import factory.fuzzy
 import pytest
-from sqlalchemy import select
+from sqlalchemy.exc import DataError
 
 from estudo_fastapi.models import Todo, TodoState
 
@@ -255,8 +255,9 @@ async def test_list_todo_should_return_all(
     ]
 
 
+# O comportamento do test mudou por conta de mudaça do SQLite por PostgreSQL
 @pytest.mark.asyncio
-async def test_create_todo_with_not_exists_estate(session, user):
+async def test_create_todo_with_not_exists_state(session, user):
     todo = Todo(
         title='Todo test',
         description='This is a todo test',
@@ -264,10 +265,10 @@ async def test_create_todo_with_not_exists_estate(session, user):
         user_id=user.id,
     )
     session.add(todo)
-    await session.commit()
+    with pytest.raises(DataError):
+        await session.commit()
 
-    with pytest.raises(LookupError):
-        await session.scalar(select(Todo))
+    await session.rollback()
 
 
 def test_list_todos_filter_title_min_length(client, token):

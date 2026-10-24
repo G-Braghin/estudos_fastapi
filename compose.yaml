@@ -1,0 +1,32 @@
+services:
+  estudo_fast_db:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/
+    environment:
+      POSTGRES_USER: guilherme
+      POSTGRES_DB: estudos_fastapi
+      POSTGRES_PASSWORD: estudofast
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
+
+  estudo_fast_app:
+    image: estudo_fast_app
+    entrypoint: ./entrypoint.sh
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - estudo_fast_db
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
